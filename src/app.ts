@@ -1,9 +1,11 @@
-import express, { json, NextFunction, Request, Response } from 'express';
+import express, {
+  json, NextFunction, Request, Response
+} from 'express';
 import * as mongoose from 'mongoose';
 import usersRouter from './routes/users';
 import cardsRouter from './routes/cards';
-import errorHandler from './middlewares/error-handler';
-import {AuthContext} from './types/auth-context';
+import errorHandler, { notFoundHandler } from './middlewares/error-handler';
+import { AuthContext } from './types/auth-context';
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -24,6 +26,6 @@ app.use(json());
 app.use('/users', usersRouter);
 app.use('/cards', cardsRouter);
 
+app.use(notFoundHandler);
 app.use(errorHandler);
-
 app.listen(PORT);

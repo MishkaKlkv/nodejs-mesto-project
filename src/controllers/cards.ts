@@ -5,6 +5,7 @@ import { AuthContext } from '../types/auth-context';
 import NotFoundError from '../error/not-found-error';
 import { handleErrorInvalidIdOrIdDoesNotExist } from '../middlewares/error-handler';
 import BadRequestError from '../error/bad-request-error';
+import { constants } from 'http2';
 
 const getCards = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   Card.find({})
@@ -17,7 +18,7 @@ const createCard = async (req: Request, res: Response<unknown, AuthContext>, nex
   const { name, link } = req.body;
   const userId = res.locals.user._id;
   Card.create({ name, link, owner: userId })
-    .then((card) => res.send(card))
+    .then((card) => res.status(constants.HTTP_STATUS_CREATED).send(card))
     .catch((error) => {
       if (error instanceof MongooseError.ValidationError) {
         return next(new BadRequestError(error.message));
@@ -40,7 +41,7 @@ const likeCard = async (req: Request, res: Response<unknown, AuthContext>, next:
   : Promise<void> => {
   const { cardId } = req.params;
   const userId = res.locals.user._id;
-  Card.findByIdAndUpdate(cardId, { $addToSet: { likes: userId } }, { new: true })
+  Card.findByIdAndUpdate(cardId, { $addToSet: { likes: userId } }, { new: true, runValidators: true })
     .orFail(new NotFoundError())
     .then((card) => res.send(card))
     .catch((error) => {
@@ -52,7 +53,7 @@ const dislikeCard = async (req: Request, res: Response<unknown, AuthContext>, ne
   : Promise<void> => {
   const { cardId } = req.params;
   const userId = res.locals.user._id;
-  Card.findByIdAndUpdate(cardId, { $pull: { likes: userId } }, { new: true })
+  Card.findByIdAndUpdate(cardId, { $pull: { likes: userId } }, { new: true, runValidators: true })
     .orFail(new NotFoundError())
     .then((card) => res.send(card))
     .catch((error) => {

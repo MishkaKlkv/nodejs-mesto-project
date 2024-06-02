@@ -11,6 +11,10 @@ export default (err: CustomError, req: Request, res: Response) => {
   res.status(statusCode).send({ message });
 };
 
+const notFoundHandler = (req: Request, res: Response) => {
+  res.status(404).send({ message: 'The requested resource is not found' });
+};
+
 const handleErrorInvalidIdOrIdDoesNotExist = (
   error: unknown,
   next: NextFunction,
@@ -37,4 +41,5 @@ const validationError = (error: unknown, next: NextFunction): void => {
 export {
   handleErrorInvalidIdOrIdDoesNotExist,
   validationError,
+  notFoundHandler,
 };
