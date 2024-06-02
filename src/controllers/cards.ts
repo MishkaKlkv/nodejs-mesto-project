@@ -1,11 +1,11 @@
 import { NextFunction, Request, Response } from 'express';
 import { Error as MongooseError } from 'mongoose';
+import { constants } from 'http2';
 import Card from '../models/card';
 import { AuthContext } from '../types/auth-context';
 import NotFoundError from '../error/not-found-error';
 import { handleErrorInvalidIdOrIdDoesNotExist } from '../middlewares/error-handler';
 import BadRequestError from '../error/bad-request-error';
-import { constants } from 'http2';
 
 const getCards = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   Card.find({})
@@ -41,7 +41,8 @@ const likeCard = async (req: Request, res: Response<unknown, AuthContext>, next:
   : Promise<void> => {
   const { cardId } = req.params;
   const userId = res.locals.user._id;
-  Card.findByIdAndUpdate(cardId, { $addToSet: { likes: userId } }, { new: true, runValidators: true })
+  Card
+    .findByIdAndUpdate(cardId, { $addToSet: { likes: userId } }, { new: true, runValidators: true })
     .orFail(new NotFoundError())
     .then((card) => res.send(card))
     .catch((error) => {
