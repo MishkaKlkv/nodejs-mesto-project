@@ -6,6 +6,7 @@ import { AuthContext } from '../types/auth-context';
 import NotFoundError from '../error/not-found-error';
 import { handleErrorInvalidIdOrIdDoesNotExist } from '../middlewares/error-handler';
 import BadRequestError from '../error/bad-request-error';
+import ForbiddenError from '../error/forbidden-error';
 
 const getCards = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   Card.find({})
@@ -28,10 +29,16 @@ const createCard = async (req: Request, res: Response<unknown, AuthContext>, nex
 };
 
 const deleteCard = async (req: Request, res: Response, next: NextFunction) => {
-  const { cardId } = req.body;
+  const { cardId } = req.params;
   Card.findByIdAndDelete(cardId)
     .orFail(new NotFoundError())
-    .then((card) => res.send(card))
+    .then((card) => {
+      const currentUserId = res.locals.user._id;
+      if (card.owner.toString() !== currentUserId) {
+        return next(new ForbiddenError('You do not have permission to delete this card.'));
+      }
+      return res.send(card);
+    })
     .catch((error) => {
       handleErrorInvalidIdOrIdDoesNotExist(error, next, cardId, 'Card');
     });
