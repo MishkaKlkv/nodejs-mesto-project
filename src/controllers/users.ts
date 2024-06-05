@@ -37,7 +37,11 @@ const createUser = async (req: Request, res: Response, next: NextFunction): Prom
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
     })
-      .then((user) => res.status(constants.HTTP_STATUS_CREATED).send(user))
+      .then((user) => {
+        const userObj = user.toObject();
+        userObj.password = '';
+        res.status(constants.HTTP_STATUS_CREATED).send(userObj);
+      })
       .catch((error) => {
         if (error instanceof MongooseError.ValidationError) {
           return next(new BadRequestError(error.message));
@@ -74,7 +78,8 @@ const updateAvatar = async (req: Request, res: Response<unknown, AuthContext>, n
     });
 };
 
-const login = async (req: Request, res: Response<unknown, AuthContext>): Promise<void> => {
+const login = async (req: Request, res: Response<unknown, AuthContext>, next: NextFunction)
+  : Promise<void> => {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
@@ -85,7 +90,7 @@ const login = async (req: Request, res: Response<unknown, AuthContext>): Promise
       });
     })
     .catch(() => {
-      handleAuthError(res);
+      handleAuthError(res, next);
     });
 };
 

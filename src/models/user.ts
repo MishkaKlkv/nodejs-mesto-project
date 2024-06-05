@@ -3,6 +3,7 @@ import {
 } from 'mongoose';
 import validator from 'validator';
 import bcrypt from 'bcrypt';
+import UnauthorizedError from '../error/unauthorized-error';
 
 export interface IUser extends Document {
   _id: string;
@@ -59,11 +60,11 @@ const userSchema = new Schema<IUser, UserModel>({
 userSchema.static('findUserByCredentials', async function findUserByCredentials(email: string, password: string) {
   const user = await this.findOne({ email }).select('+password');
   if (!user) {
-    return Promise.reject(new Error('Incorrect email or password'));
+    return Promise.reject(new UnauthorizedError('Incorrect email or password'));
   }
   const matched = await bcrypt.compare(password, user.password);
   if (!matched) {
-    return Promise.reject(new Error('Incorrect email or password'));
+    return Promise.reject(new UnauthorizedError('Incorrect email or password'));
   }
   return user;
 });

@@ -5,14 +5,14 @@ import { CustomError } from '../error/custom-error-interface';
 import NotFoundError from '../error/not-found-error';
 import BadRequestError from '../error/bad-request-error';
 
-export default (err: CustomError, req: Request, res: Response) => {
+export default (err: CustomError, req: Request, res: Response, next: NextFunction) => {
   const statusCode = err.statusCode || constants.HTTP_STATUS_INTERNAL_SERVER_ERROR;
   const message = statusCode === constants.HTTP_STATUS_INTERNAL_SERVER_ERROR ? 'Internal server error' : err.message;
-  res.status(statusCode).send({ message });
+  next(res.status(statusCode).send({ message }));
 };
 
-const notFoundHandler = (req: Request, res: Response) => {
-  res.status(404).send({ message: 'The requested resource is not found' });
+const notFoundHandler = (req: Request, res: Response, next: NextFunction) => {
+  next(new NotFoundError('The requested resource is not found'));
 };
 
 const handleErrorInvalidIdOrIdDoesNotExist = (

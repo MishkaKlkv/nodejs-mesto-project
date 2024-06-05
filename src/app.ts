@@ -10,31 +10,17 @@ import auth from './middlewares/auth';
 import cors from 'cors';
 import { requestLogger, errorLogger } from './middlewares/logger';
 import { errors } from 'celebrate';
-import User from './models/user';
-import { MongoClient } from 'mongodb';
+import { limiter } from './utils/config';
 
 dotenv.config();
 const { PORT = 3000 } = process.env;
 const app = express();
+app.use(limiter);
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
-
-// const client = new MongoClient('mongodb://localhost:27017');
-//
-// async function run() {
-//   await client.connect();
-//   const db = client.db('mestodb');
-//   const users = db.collection('users');
-//
-//   await users.createIndex({ email: 1 }, { unique: true });
-//
-//   await client.close();
-// }
-
-// run();
 
 app.use(helmet());
 app.use(requestLogger);

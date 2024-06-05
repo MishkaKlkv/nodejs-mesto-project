@@ -30,14 +30,14 @@ const createCard = async (req: Request, res: Response<unknown, AuthContext>, nex
 
 const deleteCard = async (req: Request, res: Response, next: NextFunction) => {
   const { cardId } = req.params;
-  Card.findByIdAndDelete(cardId)
+  Card.findById(cardId)
     .orFail(new NotFoundError())
     .then((card) => {
       const currentUserId = res.locals.user._id;
       if (card.owner.toString() !== currentUserId) {
         return next(new ForbiddenError('You do not have permission to delete this card.'));
       }
-      return res.send(card);
+      return Card.deleteOne({ _id: cardId }).then(() => { res.send(card); });
     })
     .catch((error) => {
       handleErrorInvalidIdOrIdDoesNotExist(error, next, cardId, 'Card');
